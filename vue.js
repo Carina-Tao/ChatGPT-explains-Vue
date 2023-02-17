@@ -51,8 +51,8 @@
 
   /**
    * Check if value is primitive.
+   * 检测值是否为基本类型
    */
-  //
   function isPrimitive(value) {
     return (
       typeof value === 'string' ||
@@ -62,61 +62,115 @@
       typeof value === 'boolean'
     )
   }
+
+  // 检测值是否为函数
   function isFunction(value) {
     return typeof value === 'function'
   }
+
   /**
    * Quick object check - this is primarily used to tell
    * objects from primitive values when we know the value
    * is a JSON-compliant type.
+   *
+   * 这段代码定义了一个用于快速检查对象类型的函数 isObject。
+   * 该函数的目的是区分对象和基本类型，并且仅当给定参数不为 null 且类型为 object 时才返回 true。
+   * 这个函数通常用于检查一个值是否是一个对象或一个字面量对象。
+   * 在判断数据类型时，使用该函数可以避免 typeof 无法正确识别对象和 null 类型之间的区别的问题。
    */
   function isObject(obj) {
     return obj !== null && typeof obj === 'object'
   }
+
   /**
    * Get the raw type string of a value, e.g., [object Object].
    */
   var _toString = Object.prototype.toString
+  // 判断值的原始类型
   function toRawType(value) {
     return _toString.call(value).slice(8, -1)
   }
+
   /**
    * Strict object type check. Only returns true
    * for plain JavaScript objects.
+   *
+   * 这段代码定义了一个函数 isPlainObject，用来检测一个值是否为一个“纯粹”的 JavaScript 对象。
+   * 具体来说，函数内部使用 _toString.call 方法来获取传入值的类型标识，如果标识为字符串 '[object Object]'，
+   * 则说明这个值是一个 JavaScript 对象，返回 true，否则返回 false。
+   * 需要注意的是，这个函数只能用来检测“纯粹”的 JavaScript 对象，而不能检测其他类型的对象，比如由构造函数创建的对象、数组、函数等。
    */
   function isPlainObject(obj) {
     return _toString.call(obj) === '[object Object]'
   }
+
+  // 检测是否是正则
   function isRegExp(v) {
     return _toString.call(v) === '[object RegExp]'
   }
+
   /**
    * Check if val is a valid array index.
+   *
+   * 这个函数用于判断一个值是否是一个有效的数组下标。其判断逻辑如下：
+   *   1. 使用 parseFloat 方法将该值转换为数值类型。
+   *   2. 判断该数值是否大于或等于 0。
+   *   3. 判断该数值是否等于自身向下取整的结果，即该数值是否是整数。
+   *   4. 判断该数值是否是一个有限数值。
+   * 如果以上四个条件都满足，则返回 true，否则返回 false。
    */
   function isValidArrayIndex(val) {
     var n = parseFloat(String(val))
     return n >= 0 && Math.floor(n) === n && isFinite(val)
   }
+
+  /**
+   * 这段代码用来判断一个值是否是 Promise 对象。
+   * 它利用了 JavaScript 中 Promise 对象的两个特征：
+   * 一个是有一个 then 方法，另一个是有一个 catch 方法。
+   * 如果这个值是定义的（即不是 null 或 undefined），并且它有一个 then 方法和一个 catch 方法，那么它就被视为一个 Promise 对象。
+   */
   function isPromise(val) {
     return isDef(val) && typeof val.then === 'function' && typeof val.catch === 'function'
   }
+
   /**
    * Convert a value to a string that is actually rendered.
+   *
+   * 这是一个用于将值转换为字符串的函数，函数会根据参数的类型进行不同的处理：
+   *   - 如果参数为 null 或 undefined，返回空字符串 ''。
+   *   - 如果参数为数组或普通对象且具有自定义的 toString 方法，返回该方法返回的字符串。
+   *   - 否则，如果参数为数组或普通对象，返回该对象的 JSON 字符串。
+   *   - 否则，返回参数的字符串形式。
+   * 该函数主要用于在打印错误信息时，将变量转换为可读性更好的字符串形式。
    */
   function toString(val) {
     return val == null ? '' : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString) ? JSON.stringify(val, null, 2) : String(val)
   }
+
   /**
    * Convert an input value to a number for persistence.
    * If the conversion fails, return original string.
+   *
+   * toNumber 函数的作用是将一个值转换为数字。
+   * 它先尝试将值转换为浮点数（即调用 parseFloat 函数），如果转换失败，则返回原始值。
+   * 由于 JavaScript 中的数值可以是整数或浮点数，因此这个函数的返回值也可能是整数或浮点数。
+   * 如果输入值不是数值，而是一个字符串或其他类型的数据，则可以通过这个函数将其转换为数值。
    */
   function toNumber(val) {
     var n = parseFloat(val)
     return isNaN(n) ? val : n
   }
+
   /**
    * Make a map and return a function for checking if a key
    * is in that map.
+   *
+   * 创建一个映射表，以字符串作为输入，并返回一个函数，该函数将返回字符串是否出现在映射表中。
+   *
+   * @param {string} str - 用逗号分隔的字符串。
+   * @param {boolean} [expectsLowerCase=false] - 值为 true 时，检查时会将字符串转为小写。
+   * @returns {Function} - 一个函数，接受一个字符串作为输入，并返回一个布尔值，指示该字符串是否出现在映射表中，是则返回该字符串，不是则返回 undefined。
    */
   function makeMap(str, expectsLowerCase) {
     var map = Object.create(null)
@@ -132,16 +186,22 @@
           return map[val]
         }
   }
+
   /**
    * Check if a tag is a built-in tag.
+   * 用于检查某个标签名是否是内置标签，即是否是 slot 或 component，如果是则返回 slot 或 component，否则返回 undefined。
    */
   var isBuiltInTag = makeMap('slot,component', true)
+
   /**
    * Check if an attribute is a reserved attribute.
+   * 检查一个属性是否是保留字
    */
   var isReservedAttribute = makeMap('key,ref,slot,slot-scope,is')
+
   /**
    * Remove an item from an array.
+   * 从数组中移除某项
    */
   function remove$2(arr, item) {
     var len = arr.length
@@ -157,15 +217,25 @@
       }
     }
   }
+
   /**
    * Check whether an object has the property.
+   * 这个函数的作用是检查一个对象是否有指定的属性，它使用了 Object.prototype.hasOwnProperty 方法来检查。
+   * 由于 JavaScript 中的对象都是通过原型继承而来的，因此使用 hasOwnProperty 方法来检查一个对象自身是否包含某个属性，而不是该属性是否在原型链上。
+   * hasOwnProperty.call(obj, key) 的意思是将 hasOwnProperty 方法应用于 obj 对象，检查它是否有一个名为 key 的自有属性。
+   * 这样可以防止 obj 对象自身重写了 hasOwnProperty 方法，导致检查属性时出错。
    */
   var hasOwnProperty = Object.prototype.hasOwnProperty
   function hasOwn(obj, key) {
     return hasOwnProperty.call(obj, key)
   }
+
   /**
    * Create a cached version of a pure function.
+   * 这个函数实现了一个缓存功能，它接收一个函数 fn 作为参数，并返回一个新函数 cachedFn。
+   * 当调用 cachedFn 函数时，它会首先检查 cache 对象中是否已经存在参数 str 的缓存结果，
+   * 如果存在，则直接返回缓存结果，否则就调用原始的函数 fn，将 str 作为参数传递给它，并将结果存储到缓存对象中，再返回结果。
+   * 这样可以减少相同参数的重复计算，提高函数的执行效率。
    */
   function cached(fn) {
     var cache = Object.create(null)
@@ -174,6 +244,7 @@
       return hit || (cache[str] = fn(str))
     }
   }
+
   /**
    * Camelize a hyphen-delimited string.
    */
