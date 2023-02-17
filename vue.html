@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="vue.js"></script>
+  </head>
+  <body>
+    <div id="app">{{ message }}</div>
+
+    <script>
+      const app = new Vue({
+        el: '#app',
+
+        beforeCreate() {},
+        created() {},
+        beforeMount() {},
+        mounted: () => {
+          //挂载元素，获取到DOM节点
+          //           setTimeout(()=>{
+          //                this.count+=1;
+          //                console.log('this.count='+this.count)
+          //           },5000)
+        },
+        beforeUpdate() {},
+        updated() {
+          //挂载元素，获取到DOM节点
+        },
+        beforeDestroy() {},
+        destroyed() {},
+        data: {
+          count: 0,
+          message: 'Hello Vue!',
+        },
+      })
+    </script>
+  </body>
+</html>
