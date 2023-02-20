@@ -623,7 +623,7 @@
    * unicode letters used for parsing html tags, component names and property paths.
    * using https://www.w3.org/TR/html53/semantics-scripting.html#potentialcustomelementname
    * skipping \u10000-\uEFFFF due to it freezing up PhantomJS
-   * 
+   *
    * 这个变量定义了一个正则表达式，匹配 Unicode 中的字母字符。正则表达式中的范围涵盖了许多 Unicode 字符集合，包括：
    *  - 大小写字母 a-z 和 A-Z
    *  - 中文字符“·”（\u00B7）
@@ -635,14 +635,14 @@
    * 这个变量通常用于验证用户输入是否包含字母字符。
    */
   var unicodeRegExp = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F-\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD/
-  
+
   /**
    * Check if a string starts with $ or _
-   * 
+   *
    * 这个函数用来判断一个字符串是否是保留的（即是否以 $ 或 _ 开头）。
    * 函数首先将输入字符串强制转换为字符串类型，然后获取该字符串的第一个字符的 Unicode 编码。
    * 如果这个字符的编码是 0x24（即 $）或 0x5f（即 _），则函数返回 true，否则返回 false。
-   * 
+   *
    * 在 JavaScript 中，以 $ 或 _ 开头的变量名通常被视为特殊变量，可能具有特殊的含义或用途，因此这些变量名通常被保留不用作普通变量名。
    * 这个函数就是用来判断一个变量名是否是被保留的。
    */
@@ -650,9 +650,14 @@
     var c = (str + '').charCodeAt(0)
     return c === 0x24 || c === 0x5f
   }
-  
+
   /**
    * Define a property.
+   * 这是 Vue.js 源码中的一个函数，用于在对象上定义一个新属性或修改已有属性。
+   * 这个函数使用了 Object.defineProperty 方法来实现，该方法可以将一个属性添加到对象上，
+   * 并定义这个属性的特性，包括可写性、可枚举性和可配置性。
+   * 在这个函数中，obj 是要添加或修改属性的对象，key 是要添加或修改的属性名称，val 是要添加或修改的属性值，enumerable 表示该属性是否可枚举。
+   * 函数体中通过调用 Object.defineProperty 来实现对对象的修改或添加属性的操作。
    */
   function def(obj, key, val, enumerable) {
     Object.defineProperty(obj, key, {
@@ -662,8 +667,15 @@
       configurable: true,
     })
   }
+
   /**
    * Parse simple path.
+   *
+   * 这段代码定义了一个 parsePath 函数，用于解析一个由 . 连接的路径字符串，例如 'a.b.c'，并返回该路径所对应的属性值或函数。
+   * 函数首先使用正则表达式 bailRE 检查 path 是否包含不合法的字符。如果 path 包含不合法字符，则返回 undefined。
+   * 如果 path 符合要求，函数将该路径字符串通过 . 分隔成多个属性名称组成的数组 segments，然后返回一个函数，
+   * 该函数接受一个对象作为参数，并沿着路径依次访问该对象的属性，最终返回路径所对应的属性值。
+   * 如果对象不包含路径中的某个属性，则返回 undefined。
    */
   var bailRE = new RegExp('[^'.concat(unicodeRegExp.source, '.$_\\d]'))
   function parsePath(path) {
@@ -681,9 +693,14 @@
   }
 
   // can we use __proto__?
+  // 检测是否支持__proto__属性。
+  // __proto__属性在原型链的继承中扮演了非常重要的角色。
+  //  在旧的浏览器中，它不一定被支持，而是通过Object.getPrototypeOf()方法来获取对象的原型，因此需要检测是否支持该属性。
   var hasProto = '__proto__' in {}
   // Browser environment sniffing
+  // 判断当前是否处于浏览器环境中。
   var inBrowser = typeof window !== 'undefined'
+  // 检测当前浏览器的 User Agent 并判断是否为 IE / Edge / iOS / FireFox 等特定浏览器。
   var UA = inBrowser && window.navigator.userAgent.toLowerCase()
   var isIE = UA && /msie|trident/.test(UA)
   var isIE9 = UA && UA.indexOf('msie 9.0') > 0
@@ -696,6 +713,7 @@
   // Firefox has a "watch" function on Object.prototype...
   // @ts-expect-error firebox support
   var nativeWatch = {}.watch
+  // 判断是否支持 Passsive Event Listener，Passive Event Listener 是一种用于优化滚动性能的技术，可以让浏览器在滚动时更快地响应用户输入。
   var supportsPassive = false
   if (inBrowser) {
     try {
@@ -709,8 +727,10 @@
       window.addEventListener('test-passive', null, opts)
     } catch (e) {}
   }
+
   // this needs to be lazy-evaled because vue may be required before
   // vue-server-renderer can set VUE_ENV
+  // 该函数主要用于判断当前的渲染环境是否为服务端渲染。
   var _isServer
   var isServerRendering = function () {
     if (_isServer === undefined) {
@@ -725,9 +745,14 @@
     }
     return _isServer
   }
+
   // detect devtools
+  // window.__VUE_DEVTOOLS_GLOBAL_HOOK__ 是 Vue.js devtools 插件所需的全局钩子
+  // 在浏览器环境中安装了 Vue.js devtools 插件后才会存在
   var devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
+
   /* istanbul ignore next */
+  
   function isNative(Ctor) {
     return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
   }
