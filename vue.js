@@ -256,7 +256,7 @@
       return c ? c.toUpperCase() : ''
     })
   })
-  
+
   /**
    * Capitalize a string.
    * 讲第一个字母变成大写
@@ -264,7 +264,7 @@
   var capitalize = cached(function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
   })
-  
+
   /**
    * Hyphenate a camelCase string.
    * 将字符串中的大写字母转为连字符形式
@@ -274,7 +274,7 @@
   var hyphenate = cached(function (str) {
     return str.replace(hyphenateRE, '-$1').toLowerCase()
   })
-  
+
   /**
    * Simple bind polyfill for environments that do not support it,
    * e.g., PhantomJS 1.x. Technically, we don't need this anymore
@@ -760,13 +760,32 @@
   var devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
 
   /* istanbul ignore next */
-  
+  /**
+   * 这是一个判断一个函数是否为原生函数（native function）的函数。
+   *  - typeof Ctor === 'function' 用于判断 Ctor 是否为函数类型；
+   *  - Ctor.toString() 用于获取函数的字符串表达式
+   *  - /native code/.test(Ctor.toString()) 用于判断该字符串表达式是否含有 "native code"，
+   *      由于原生函数在执行时使用的是本地代码而不是 JavaScript 代码，
+   *  - 因此字符串中会含有 "native code"。如果该函数为原生函数，则返回 true，否则返回 false。
+   */
   function isNative(Ctor) {
     return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
   }
+
+  /**
+   * 用于检查当前环境是否支持 Symbol 和 Reflect.ownKeys，并且确保它们都是原生实现的。
+   */
   var hasSymbol = typeof Symbol !== 'undefined' && isNative(Symbol) && typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys)
+
+  /**
+   * 这段代码判断了 Set 是否存在，并且是否是原生的 Set 实现，
+   * 如果存在且是原生实现，则将 _Set 设置为原生 Set；
+   * 否则，创建一个不支持对象作为键的非标准 Set 的实现，用于处理 Set 的基本操作。
+   * 这个非标准 Set 实现仅能用于处理字符串或数字等基本类型的值。
+   */
   var _Set // $flow-disable-line
-  /* istanbul ignore if */ if (typeof Set !== 'undefined' && isNative(Set)) {
+  /* istanbul ignore if */
+  if (typeof Set !== 'undefined' && isNative(Set)) {
     // use native Set when available.
     _Set = Set
   } else {
@@ -793,8 +812,24 @@
    * This is exposed for compatibility with v3 (e.g. some functions in VueUse
    * relies on it). Do not use this internally, just use `currentInstance`.
    *
+   * 这段注释的意思是，这个函数是为了与 Vue 3 兼容而暴露出来的（例如 VueUse 库的一些函数需要它）。内部不要使用这个函数，而是直接使用 currentInstance。
+   * 在 Vue.js 的上下文中，内部通常指的是 Vue.js 框架本身内部实现的细节，包括函数、对象、属性等等。
+   * 这些内部实现通常是不应该被直接使用或者修改的，因为这可能会影响到框架的正确性和稳定性。
+   * 相反，开发者应该仅仅使用 Vue.js 提供的公共 API，这些 API 被认为是稳定和可用的。
+   *
    * @internal this function needs manual type declaration because it relies
    * on previously manually authored types from Vue 2
+   *
+   * 这段代码定义了两个函数，getCurrentInstance()和setCurrentInstance(vm)，用于获取和设置当前组件实例。
+   * 在Vue.js 2.x版本中，组件实例是以静态属性$parent和$children等方式传递的，因此在某些情况下，获取当前组件实例比较困难。
+   * getCurrentInstance()和setCurrentInstance(vm)解决了这个问题，它们可以帮助开发者在任何地方访问当前组件实例。这些函数也在一些插件中被用到。
+   */
+
+  /**
+   * getCurrentInstance 函数是用于获取当前激活的 Vue 组件实例对象的函数，该函数返回一个包含组件实例的代理对象 { proxy: currentInstance }。
+   * 具体来说，该函数首先检查 currentInstance 是否存在（不为 null 或 undefined），如果存在则返回一个包含该实例的代理对象，否则返回 undefined。
+   * 由于 Vue 3 的组件实例是通过 createApp 函数创建的，因此在 Vue 2 中，
+   * 该函数的实现依赖于 currentInstance 的值，该值在组件的生命周期函数中通过 setCurrentInstance 函数进行设置。
    */
   function getCurrentInstance() {
     return currentInstance && { proxy: currentInstance }
@@ -802,8 +837,20 @@
   /**
    * @internal
    */
+  /**
+   * 这是一个 Vue.js 的内部函数，用于在组件的生命周期中管理当前的组件实例。
+   * 在调用组件内的方法时，Vue.js 可以通过 getCurrentInstance 函数来获取当前的组件实例，而 setCurrentInstance 函数可以设置当前组件实例。
+   * 在这个函数中，首先判断传入的 vm 是否为 undefined，如果是，就将它设置为 null。
+   * 然后判断 vm 是否为 false，如果是，则执行 currentInstance._scope.off()，这个函数的作用是解除当前组件实例的关联。
+   * 接着将 currentInstance 设置为传入的 vm。最后，如果 vm 不为 false，就执行 vm._scope.on()，这个函数的作用是将当前组件实例与它所在的 scope 关联起来。
+   *
+   * 总的来说，这个函数的作用是管理当前的组件实例，在组件的生命周期中帮助 Vue.js 正确地管理组件实例与它所在的 scope 的关系。
+   *
+   *
+   */
   function setCurrentInstance(vm) {
     if (vm === void 0) {
+      // 相当于 typeof vm === "undefined"
       vm = null
     }
     if (!vm) currentInstance && currentInstance._scope.off()
@@ -813,6 +860,13 @@
 
   /**
    * @internal
+   */
+  // 这是一个使用函数表达式创建的类，函数表达式需要立即执行才能创建类，并返回该类。
+  // 因此，定义类时使用了自执行函数。这个自执行函数是一个立即调用函数表达式（IIFE），会在定义时立即执行，并返回类 VNode。
+  /**
+   * 该构造函数中有多个属性，用于描述 VNode 对象的各个属性，如节点标签、属性数据、子节点、文本内容、节点实例等等。
+   * 同时，它还具有许多函数方法，用于描述 VNode 对象的各种行为，如获取子组件实例、遍历子节点、获取子节点的真实 DOM 对象等。
+   * 最后，它还定义了一个 child 属性，作为获取 componentInstance 属性的别名，用于向后兼容。
    */
   var VNode = /** @class */ (function () {
     function VNode(tag, data, children, text, elm, context, componentOptions, asyncFactory) {
@@ -840,6 +894,9 @@
       this.asyncMeta = undefined
       this.isAsyncPlaceholder = false
     }
+    // 在Vue2中，VNode中的componentInstance属性表示与VNode相关联的组件实例，但在Vue3中，这个属性被重命名为“子实例”（child）。
+    // Vue2中的组件实例可以通过访问VNode的componentInstance属性来访问，但是在Vue3中，使用了一个新的语法来访问组件实例，因此这里提供了一个别名child来支持向后兼容性。
+    // 这种方法的优点是可以在不破坏Vue2的现有功能的情况下实现Vue3的新功能，同时也为用户提供了更多的迁移时间。
     Object.defineProperty(VNode.prototype, 'child', {
       // DEPRECATED: alias for componentInstance for backwards compat.
       /* istanbul ignore next */
@@ -851,6 +908,13 @@
     })
     return VNode
   })()
+
+  /**
+   * 这是一个用于创建空注释节点（即不渲染任何内容，仅仅是用来占位的注释节点）的工具函数。
+   * 它接受一个可选的字符串参数，表示注释节点中的文本内容，默认为空字符串。
+   * 它内部调用了 new VNode() 创建了一个新的 VNode 实例，然后设置了该实例的一些属性，使其成为一个合法的空注释节点。最后返回这个实例。
+   * @param {String} text
+   */
   var createEmptyVNode = function (text) {
     if (text === void 0) {
       text = ''
@@ -860,9 +924,15 @@
     node.isComment = true
     return node
   }
+
+  /**
+   * 这个函数的作用是根据传入的 val 创建一个文本节点（VNode），其中文本节点的 text 属性设置为 val 的字符串形式。
+   * 同时，在创建节点时，其他属性如标签名、数据、子节点等都会被设置为 undefined，因为文本节点不需要这些属性。
+   */
   function createTextVNode(val) {
     return new VNode(undefined, undefined, undefined, String(val))
   }
+  
   // optimized shallow clone
   // used for static nodes and slot nodes because they may be reused across
   // multiple renders, cloning them avoids errors when DOM manipulations rely
