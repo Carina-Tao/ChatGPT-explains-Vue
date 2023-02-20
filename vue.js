@@ -232,7 +232,7 @@
 
   /**
    * Create a cached version of a pure function.
-   * 这个函数实现了一个缓存功能，它接收一个函数 fn 作为参数，并返回一个新函数 cachedFn。
+   * 这个函数使用实现了一个缓存功能，它接收一个函数 fn 作为参数，并返回一个新函数 cachedFn。
    * 当调用 cachedFn 函数时，它会首先检查 cache 对象中是否已经存在参数 str 的缓存结果，
    * 如果存在，则直接返回缓存结果，否则就调用原始的函数 fn，将 str 作为参数传递给它，并将结果存储到缓存对象中，再返回结果。
    * 这样可以减少相同参数的重复计算，提高函数的执行效率。
@@ -247,6 +247,8 @@
 
   /**
    * Camelize a hyphen-delimited string.
+   * @param {string} str - 需要转换的字符串。
+   * @return {string} 转换后的字符串。
    */
   var camelizeRE = /-(\w)/g
   var camelize = cached(function (str) {
@@ -254,19 +256,25 @@
       return c ? c.toUpperCase() : ''
     })
   })
+  
   /**
    * Capitalize a string.
+   * 讲第一个字母变成大写
    */
   var capitalize = cached(function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1)
   })
+  
   /**
    * Hyphenate a camelCase string.
+   * 将字符串中的大写字母转为连字符形式
+   * 如果传入字符串 "FooBar"，那么函数将返回 "foo-bar"。
    */
   var hyphenateRE = /\B([A-Z])/g
   var hyphenate = cached(function (str) {
     return str.replace(hyphenateRE, '-$1').toLowerCase()
   })
+  
   /**
    * Simple bind polyfill for environments that do not support it,
    * e.g., PhantomJS 1.x. Technically, we don't need this anymore
