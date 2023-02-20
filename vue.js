@@ -281,6 +281,21 @@
    * since native bind is now performant enough in most browsers.
    * But removing it would mean breaking code that was able to run in
    * PhantomJS 1.x, so this must be kept for backward compatibility.
+   *
+   * 这是一个 polyfill 函数，用于实现 JavaScript 中的 bind 方法。
+   * bind 方法用于将一个函数绑定到一个对象上，并返回一个新的函数。
+   * 这个新函数的执行环境会被绑定到指定的对象上，同时也可以传递一些默认参数。
+   *
+   * 这个 polyfillBind 函数接受两个参数：要绑定的函数 fn 和执行环境 ctx。
+   * 它返回一个新函数 boundFn，这个函数的执行环境被绑定到了 ctx 对象上。
+   * 当新函数被调用时，它会将所有传递给它的参数都传递给原始函数 fn。
+   *
+   * 这个函数内部使用了 arguments 对象，以便处理任意数量的参数。
+   * 如果传递了一个或多个参数，那么它会调用原始函数 fn 并传递这些参数。
+   * 如果只传递了一个参数，那么它会调用原始函数 fn 并将这个参数作为它的上下文环境。
+   *
+   * 此外，它还使用了一个 _length 属性来记录原始函数 fn 的参数个数。
+   * 这个属性用于保留原始函数的参数数量，以便可以在新函数上使用 apply 方法时进行正确的参数传递。
    */
   /* istanbul ignore next */
   function polyfillBind(fn, ctx) {
@@ -291,13 +306,31 @@
     boundFn._length = fn.length
     return boundFn
   }
+
+  /**
+   * 这个函数是 JavaScript 原生的 bind() 方法的封装。
+   * bind() 方法用于绑定函数的 this 上下文和一些预设的参数，并返回一个新的绑定函数。
+   * 在这个函数中，fn 是需要绑定上下文的函数，ctx 是需要绑定的上下文对象。
+   * 这个函数返回使用 bind() 绑定上下文后的新函数。
+   * 对于新的函数，它具有和原函数相同的 length 属性，同时绑定了上下文和参数。
+   */
   function nativeBind(fn, ctx) {
     return fn.bind(ctx)
   }
+
   // @ts-expect-error bind cannot be `undefined`
+  // 这行代码根据当前环境是否支持 Function.prototype.bind 方法来选择使用 nativeBind 还是 polyfillBind 实现函数绑定。
   var bind$1 = Function.prototype.bind ? nativeBind : polyfillBind
+
   /**
    * Convert an Array-like object to a real Array.
+  
+   * 将一个类数组对象或可迭代对象转换为数组
+   * @param {Array|Object} list - 可迭代对象或类数组对象
+   * @param {Number} [start=0] - 从 list 中开始转换的索引
+   * @returns {Array} 返回转换后的数组
+   * 该函数实现的方式是首先通过list.length获取list的长度，并根据start计算出需要转换的元素个数，
+   * 然后使用new Array(i)创建一个指定长度的新数组ret，使用while循环将list中的元素依次加入到ret中，并返回最终的数组ret。
    */
   function toArray(list, start) {
     start = start || 0
@@ -310,6 +343,10 @@
   }
   /**
    * Mix properties into target object.
+  
+   * 该函数的作用是将 _from 对象中的属性复制到 to 对象中，返回合并后的 to 对象。
+   * 具体而言，该函数使用一个 for-in 循环遍历 _from 对象中的属性，将其复制到 to 对象中。如果 to 对象中已经存在相同的属性，则会被覆盖。
+   * 该函数的应用场景为合并对象的属性，用于实现 mixin 和继承等功能。
    */
   function extend(to, _from) {
     for (var key in _from) {
@@ -334,23 +371,37 @@
    * Perform no operation.
    * Stubbing args to make Flow happy without leaving useless transpiled code
    * with ...rest (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+   *
+   * 这是一个空函数，不执行任何操作。函数名 noop 代表 "no operation"。
+   * 它的参数 a, b, c 用来填充参数，以让 Flow（一个静态类型检查器）可以在不留下无用的转译代码的情况下满足严格函数调用参数的要求。
    */
   function noop(a, b, c) {}
+
   /**
    * Always return false.
+   * 这是一个简单的函数表达式，它接受三个参数（a、b、c）并返回 false，因此通常被用作“否定”的函数，用于表示某些条件不成立。
    */
   var no = function (a, b, c) {
     return false
   }
+
   /* eslint-enable no-unused-vars */
   /**
    * Return the same value.
+   * 这是一个接受任何参数并返回相同参数的函数，通常用于不需要对参数进行处理的场景。
    */
   var identity = function (_) {
     return _
   }
+
   /**
    * Generate a string containing static keys from compiler modules.
+   *
+   * 这个函数的作用是生成静态键。它接收一个模块数组作为参数，每个模块都有一个 staticKeys 属性，它是一个字符串数组，包含了一些静态的 key。
+   * genStaticKeys$1 函数会将这些静态的 key 组合在一起并返回一个逗号分隔的字符串。
+   *
+   * 函数的具体实现是通过 reduce 方法将所有模块的 staticKeys 属性数组合并为一个数组，
+   * 然后通过 join 方法将数组中的所有元素用逗号连接起来，最终生成一个逗号分隔的字符串。
    */
   function genStaticKeys$1(modules) {
     return modules
@@ -362,6 +413,14 @@
   /**
    * Check if two values are loosely equal - that is,
    * if they are plain objects, do they have the same shape?
+   * 这是一个深度比较两个值是否相等的函数，比较规则如下：
+   *  - 如果两个值严格相等，即 a === b，返回 true
+   *  - 如果 a 和 b 都是对象（通过 isObject 函数判断），则比较它们的所有属性是否都相等，
+   *     如果对象属性值为数组，则对数组每个元素递归调用 looseEqual 函数比较；
+   *     如果对象属性值为 Date 类型，则比较它们的时间戳是否相等；如果对象属性值为其他类型，则递归调用 looseEqual 函数比较；
+   *  - 如果 a 和 b 都不是对象，则通过 String(a) 和 String(b) 的比较结果来判断是否相等；
+   *  - 如果 a 和 b 类型不一致，返回 false。
+   * 值得注意的是，如果 a 和 b 中存在循环引用，则会导致堆栈溢出，因此该函数并不完全可靠，需要谨慎使用。
    */
   function looseEqual(a, b) {
     if (a === b) return true
@@ -403,10 +462,14 @@
       return false
     }
   }
+
   /**
    * Return the first index at which a loosely equal value can be
    * found in the array (if value is a plain object, the array must
    * contain an object of the same shape), or -1 if it is not present.
+   *
+   * 在一个数组中使用 looseEqual 进行松散匹配搜索，并返回搜索到的第一个匹配项的下标。
+   * 如果没有找到，则返回 -1。
    */
   function looseIndexOf(arr, val) {
     for (var i = 0; i < arr.length; i++) {
@@ -414,8 +477,16 @@
     }
     return -1
   }
+
   /**
    * Ensure a function is called only once.
+   *
+   * 对传入的函数进行包装，返回一个只能执行一次的函数
+   * @param {Function} fn 要进行包装的函数
+   * 返回一个只能执行一次的函数
+   * 定义一个变量 called，用来标识函数是否已经被执行过
+   * 返回一个函数，该函数第一次执行时将 called 标识设置为 true，
+   * 然后执行传入的函数 fn，并将 this 和参数传递给 fn，之后再次执行该函数时不再执行 fn。
    */
   function once(fn) {
     var called = false
@@ -435,8 +506,15 @@
     }
   }
 
+  // 用于标识一个 DOM 节点是否由服务器端渲染而来，即其具有 data-server-rendered 属性。
   var SSR_ATTR = 'data-server-rendered'
+
+  // 是一个数组，其中包含 Vue.js 中注册的资源类型，包括组件（component）、指令（directive）和过滤器（filter）。
   var ASSET_TYPES = ['component', 'directive', 'filter']
+
+  // 其中包含 Vue.js 中组件生命周期钩子函数的名称，按照调用顺序排序。
+  // 包括 beforeCreate、created、beforeMount、mounted、beforeUpdate、updated、beforeDestroy、destroyed、
+  // activated、deactivated、errorCaptured、serverPrefetch、renderTracked 和 renderTriggered。
   var LIFECYCLE_HOOKS = [
     'beforeCreate',
     'created',
@@ -457,77 +535,94 @@
   var config = {
     /**
      * Option merge strategies (used in core/util/options)
+     * 选项合并策略。Vue.js 的选项合并是通过 mergeOptions 方法实现的，合并时会根据选项的类型和合并策略进行合并。
      */
     // $flow-disable-line
     optionMergeStrategies: Object.create(null),
     /**
      * Whether to suppress warnings.
+     * 是否关闭警告提示。
      */
     silent: false,
     /**
      * Show production mode tip message on boot?
+     * 是否在开发环境以外的环境中显示生产提示。
      */
     productionTip: true,
     /**
      * Whether to enable devtools
+     * 是否开启开发者工具（即 Vue.js 的浏览器调试插件）。
      */
     devtools: true,
     /**
      * Whether to record perf
+     * 是否启用性能追踪。如果设置为 true，则会在组件初始化时记录一些性能数据。
      */
     performance: false,
     /**
      * Error handler for watcher errors
+     * 错误处理函数，用于处理组件渲染过程中的错误。
      */
     errorHandler: null,
     /**
      * Warn handler for watcher warns
+     * 警告处理函数，用于处理组件渲染过程中的警告信息。
      */
     warnHandler: null,
     /**
      * Ignore certain custom elements
+     * 忽略某些自定义元素，使其不被识别为未知元素。默认为空数组。
      */
     ignoredElements: [],
     /**
      * Custom user key aliases for v-on
+     * 自定义按键别名，用于 v-on 指令中的按键修饰符。
      */
     // $flow-disable-line
     keyCodes: Object.create(null),
     /**
      * Check if a tag is reserved so that it cannot be registered as a
      * component. This is platform-dependent and may be overwritten.
+     * 检查一个标签名是否是保留标签，如果是则不能用作组件名。
      */
     isReservedTag: no,
     /**
      * Check if an attribute is reserved so that it cannot be used as a component
      * prop. This is platform-dependent and may be overwritten.
+     * 检查一个属性名是否是保留属性，如果是则不能用作组件的 prop 名。
      */
     isReservedAttr: no,
     /**
      * Check if a tag is an unknown element.
      * Platform-dependent.
+     * 检查一个标签名是否是未知元素。
      */
     isUnknownElement: no,
     /**
      * Get the namespace of an element
+     * 获取元素的命名空间。
      */
     getTagNamespace: noop,
     /**
      * Parse the real tag name for the specific platform.
+     * 解析特定平台的标签名。
      */
     parsePlatformTagName: identity,
     /**
      * Check if an attribute must be bound using property, e.g. value
      * Platform-dependent.
+     * 检查一个属性是否需要使用 props 选项来绑定，例如 value 属性。
      */
     mustUseProp: no,
     /**
      * Perform updates asynchronously. Intended to be used by Vue Test Utils
      * This will significantly reduce performance if set to false.
+     * 是否启用异步更新。默认为 true。
      */
     async: true,
     /**
      * Exposed for legacy reasons
+     * 生命周期钩子数组，按照执行顺序排序。
      */
     _lifecycleHooks: LIFECYCLE_HOOKS,
   }
@@ -536,17 +631,41 @@
    * unicode letters used for parsing html tags, component names and property paths.
    * using https://www.w3.org/TR/html53/semantics-scripting.html#potentialcustomelementname
    * skipping \u10000-\uEFFFF due to it freezing up PhantomJS
+   *
+   * 这个变量定义了一个正则表达式，匹配 Unicode 中的字母字符。正则表达式中的范围涵盖了许多 Unicode 字符集合，包括：
+   *  - 大小写字母 a-z 和 A-Z
+   *  - 中文字符“·”（\u00B7）
+   *  - 拉丁文扩展字符集 A 至 Ö 和 Ø 至 ö
+   *  - 希腊字符集（\u037F 至 \u1FFF）
+   *  - 维吾尔语、藏文、缅甸语和泰语字符（\u200C 至 \u200D，\uF900 至 \uFFFD）
+   *  - 数学符号、希腊字符和其他符号（\u2070 至 \u218F）
+   *  - 古代象形文字、楔形文字、表意文字和音素文字等字符集合（\u2C00 至 \u2FEF）
+   * 这个变量通常用于验证用户输入是否包含字母字符。
    */
   var unicodeRegExp = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F-\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD/
+
   /**
    * Check if a string starts with $ or _
+   *
+   * 这个函数用来判断一个字符串是否是保留的（即是否以 $ 或 _ 开头）。
+   * 函数首先将输入字符串强制转换为字符串类型，然后获取该字符串的第一个字符的 Unicode 编码。
+   * 如果这个字符的编码是 0x24（即 $）或 0x5f（即 _），则函数返回 true，否则返回 false。
+   *
+   * 在 JavaScript 中，以 $ 或 _ 开头的变量名通常被视为特殊变量，可能具有特殊的含义或用途，因此这些变量名通常被保留不用作普通变量名。
+   * 这个函数就是用来判断一个变量名是否是被保留的。
    */
   function isReserved(str) {
     var c = (str + '').charCodeAt(0)
     return c === 0x24 || c === 0x5f
   }
+
   /**
    * Define a property.
+   * 这是 Vue.js 源码中的一个函数，用于在对象上定义一个新属性或修改已有属性。
+   * 这个函数使用了 Object.defineProperty 方法来实现，该方法可以将一个属性添加到对象上，
+   * 并定义这个属性的特性，包括可写性、可枚举性和可配置性。
+   * 在这个函数中，obj 是要添加或修改属性的对象，key 是要添加或修改的属性名称，val 是要添加或修改的属性值，enumerable 表示该属性是否可枚举。
+   * 函数体中通过调用 Object.defineProperty 来实现对对象的修改或添加属性的操作。
    */
   function def(obj, key, val, enumerable) {
     Object.defineProperty(obj, key, {
@@ -556,8 +675,15 @@
       configurable: true,
     })
   }
+
   /**
    * Parse simple path.
+   *
+   * 这段代码定义了一个 parsePath 函数，用于解析一个由 . 连接的路径字符串，例如 'a.b.c'，并返回该路径所对应的属性值或函数。
+   * 函数首先使用正则表达式 bailRE 检查 path 是否包含不合法的字符。如果 path 包含不合法字符，则返回 undefined。
+   * 如果 path 符合要求，函数将该路径字符串通过 . 分隔成多个属性名称组成的数组 segments，然后返回一个函数，
+   * 该函数接受一个对象作为参数，并沿着路径依次访问该对象的属性，最终返回路径所对应的属性值。
+   * 如果对象不包含路径中的某个属性，则返回 undefined。
    */
   var bailRE = new RegExp('[^'.concat(unicodeRegExp.source, '.$_\\d]'))
   function parsePath(path) {
@@ -575,9 +701,14 @@
   }
 
   // can we use __proto__?
+  // 检测是否支持__proto__属性。
+  // __proto__属性在原型链的继承中扮演了非常重要的角色。
+  //  在旧的浏览器中，它不一定被支持，而是通过Object.getPrototypeOf()方法来获取对象的原型，因此需要检测是否支持该属性。
   var hasProto = '__proto__' in {}
   // Browser environment sniffing
+  // 判断当前是否处于浏览器环境中。
   var inBrowser = typeof window !== 'undefined'
+  // 检测当前浏览器的 User Agent 并判断是否为 IE / Edge / iOS / FireFox 等特定浏览器。
   var UA = inBrowser && window.navigator.userAgent.toLowerCase()
   var isIE = UA && /msie|trident/.test(UA)
   var isIE9 = UA && UA.indexOf('msie 9.0') > 0
@@ -590,6 +721,7 @@
   // Firefox has a "watch" function on Object.prototype...
   // @ts-expect-error firebox support
   var nativeWatch = {}.watch
+  // 判断是否支持 Passsive Event Listener，Passive Event Listener 是一种用于优化滚动性能的技术，可以让浏览器在滚动时更快地响应用户输入。
   var supportsPassive = false
   if (inBrowser) {
     try {
@@ -603,8 +735,10 @@
       window.addEventListener('test-passive', null, opts)
     } catch (e) {}
   }
+
   // this needs to be lazy-evaled because vue may be required before
   // vue-server-renderer can set VUE_ENV
+  // 该函数主要用于判断当前的渲染环境是否为服务端渲染。
   var _isServer
   var isServerRendering = function () {
     if (_isServer === undefined) {
@@ -619,9 +753,14 @@
     }
     return _isServer
   }
+
   // detect devtools
+  // window.__VUE_DEVTOOLS_GLOBAL_HOOK__ 是 Vue.js devtools 插件所需的全局钩子
+  // 在浏览器环境中安装了 Vue.js devtools 插件后才会存在
   var devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
+
   /* istanbul ignore next */
+  
   function isNative(Ctor) {
     return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
   }
