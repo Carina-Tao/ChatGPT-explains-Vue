@@ -932,11 +932,16 @@
   function createTextVNode(val) {
     return new VNode(undefined, undefined, undefined, String(val))
   }
-  
+
   // optimized shallow clone
   // used for static nodes and slot nodes because they may be reused across
   // multiple renders, cloning them avoids errors when DOM manipulations rely
   // on their elm reference.
+  /**
+   * 这个函数是用来克隆 VNode 的。VNode 是 Virtual DOM 的概念，它用于描述真实 DOM 上的节点，例如标签名、属性、事件、文本等等。
+   * 在 Vue 中，VNode 是一个类，它的实例代表了一个虚拟节点。这个函数接收一个 VNode 实例作为参数，返回一个全新的 VNode 实例，相当于是对传入的 VNode 进行了复制。
+   * 具体实现上，这个函数会创建一个新的 VNode 实例，并将传入的 VNode 的相关属性值复制到新实例上，同时将 isCloned 属性设置为 true，以标识这个实例是被克隆出来的。
+   */
   function cloneVNode(vnode) {
     var cloned = new VNode(
       vnode.tag,
@@ -966,12 +971,14 @@
   /* not type checking this file because flow doesn't play well with Proxy */
   var initProxy
   {
+    // 创建了一个名为allowedGlobals_1的Map对象，用于存储全局变量和全局函数的名称，以便进行判断。
     var allowedGlobals_1 = makeMap(
       'Infinity,undefined,NaN,isFinite,isNaN,' +
         'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
         'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,BigInt,' +
         'require' // for Webpack/Browserify
     )
+    // 创建了两个函数，分别用于在Vue实例访问不存在的属性或方法时，发出警告。
     var warnNonPresent_1 = function (target, key) {
       warn$2(
         'Property or method "'.concat(key, '" is not defined on the instance but ') +
@@ -991,6 +998,8 @@
         target
       )
     }
+
+    // 判断当前环境是否支持ES6的Proxy对象，如果支持，则创建了两个对象，用于设置和获取Vue实例的属性和方法。
     var hasProxy_1 = typeof Proxy !== 'undefined' && isNative(Proxy)
     if (hasProxy_1) {
       var isBuiltInModifier_1 = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact')
@@ -1006,6 +1015,9 @@
         },
       })
     }
+
+    //  hasHandler_1 和 getHandler_1 分别是代理对象的 has 和 get 处理器，用于处理 Vue 组件模板中对数据的访问。
+    // 当模板中的数据未定义时，这两个处理器会向开发者抛出警告信息。
     var hasHandler_1 = {
       has: function (target, key) {
         var has = key in target
@@ -1026,6 +1038,8 @@
         return target[key]
       },
     }
+    // 这段代码是 Vue.js 中的一个方法 initProxy，用于初始化一个组件实例的渲染代理。
+    // 渲染代理的作用是为组件的模板渲染提供一个响应式的访问途径。在 Vue.js 2.x 中，使用了 ES6 中的 Proxy 对象来实现渲染代理。
     initProxy = function initProxy(vm) {
       if (hasProxy_1) {
         // determine which proxy handler to use
